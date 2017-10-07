@@ -23,7 +23,7 @@ cache:
 
 build_script:
   - git submodule update --init
-  - ps: cp flint2\build_dependencies.git .
+  - ps: cp flint2\.build_dependencies.cmd	.
 
   - if [%COMPILER%]==[MSVC15] if not exist C:\projects\mpir .build_dependencies.cmd
   - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[x64] set PATH=C:\Python35-x64;%PATH%
