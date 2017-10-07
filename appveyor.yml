@@ -23,6 +23,8 @@ cache:
 
 build_script:
   - git submodule update --init
+  - SET PYTHON=C:\Python36-x64
+  - SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
   - cd flint2
 
   - if [%COMPILER%]==[MSVC15] if not exist C:\projects\mpir .build_dependencies.cmd
@@ -33,6 +35,7 @@ build_script:
   
   # Move all built libraries into the "arb" folder so that CMake can detect them  
   - cd "%APPVEYOR_BUILD_FOLDER%"
+  - python rename_libs.py
   - ps: ls -r . | Out-File directories.txt
   - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
 
