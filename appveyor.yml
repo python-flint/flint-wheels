@@ -31,7 +31,8 @@ build_script:
 
   - if [%COMPILER%]==[MSVC15] call .appveyor_msvc_build.cmd
 
-  - cd ../arb
+  - cd ..
+  - cd arb
   - mkdir build
   - cd build
   - cmake ..
