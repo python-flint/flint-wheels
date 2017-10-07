@@ -1,0 +1,27 @@
+version: 1.0.{build}
+build:
+  verbosity: minimal
+
+image: Visual Studio 2017
+
+environment:
+  matrix:
+    - BUILD_TYPE: Release
+      COMPILER: MSVC15
+      PLATFORM: x64
+    - BUILD_TYPE: Release
+      COMPILER: MSVC15
+      PLATFORM: Win32
+
+cache:
+- C:\projects\mpir -> .build_dependencies.cmd
+- C:\projects\mpfr -> .build_dependencies.cmd
+- C:\projects\pthreads -> .build_dependencies.cmd
+- C:\projects\flint2\mpir-2.7.2 -> .build_dependencies
+- C:\projects\flint2\mpfr-3.1.5 -> .build_dependencies
+
+
+build_script:
+  - if [%COMPILER%]==[MSVC15] if not exist C:\projects\mpir .build_dependencies.cmd
+  - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[x64] set PATH=C:\Python35-x64;%PATH%
+  - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[Win32] set PATH=C:\Python35;%PATH%
