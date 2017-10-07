@@ -42,7 +42,6 @@ build_script:
   - cd "%APPVEYOR_BUILD_FOLDER%\arb"
   - mkdir build
   - cd build
-  - cmake .. -G "Visual Studio 15 2017 Win64" \ 
-      -DCMAKE_PREFIX_PATH=%APPVEYOR_BUILD_FOLDER%\mpir
+  - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_PREFIX_PATH=%APPVEYOR_BUILD_FOLDER%\mpir
 
   - cmake --build . --config Release                    # build
