@@ -1,0 +1,88 @@
+env:
+    global:
+        - REPO_DIR=python-flint
+        # Commit from your-project that you want to build
+        # pip dependencies to _build_ your project
+        - BUILD_DEPENDS="Cython"
+        # pip dependencies to _test_ your project.  Include any dependencies
+        # that you need, that are also specified in BUILD_DEPENDS, this will be
+        # a separate install.
+        - TEST_DEPENDS="numpy scipy pytest"
+        - PLAT=x86_64
+        - UNICODE_WIDTH=32
+        - WHEELHOUSE_UPLOADER_USERNAME=travis-worker
+        # Following generated with
+        # travis encrypt -r your-org/your-project-wheels WHEELHOUSE_UPLOADER_SECRET=<the api key>
+        # This is for Rackspace uploads.  Contact Matthew Brett, or the
+        # scikit-learn team, for # permission (and the API key) to upload to
+        # the Rackspace account used here, or use your own account.
+        - secure:
+            "U3f8rXWZpfPzC3L8qHWW/5+KQePix2E/VHdDb7ah7MddCH/puGeymt/eUrzXbRenykSA+9imuK0nwbIwg1ymorwKUo6YE4WfFT5hTEflKksjoMP0uJadAMhupMw/KsW58dQXRMlNQoek2gPPzgA1G8pI98ZewY0PVg/0Xp8dKRc403NIfirJYJoqgXEzVhpaB/sc11Q77j+50kfjN+zd24Ec1Et3GOPE29jgsxXZYYAW2a26p0c2Vf50Ra8iYm+lLEYE+NH/HFUTfN2QR87hUhG+VPriXvO7MTR6RkELgeEAEBHqXTyMmr6CwQHO6GQC4cGCNyqM9MPLudxAVja5bc7ISwpNZeaf7YwwjXqzjGYxjg/4DtkOb/mWmpktURV8x2sic0lfVBcemKaVQAbaKilslcpO2HBEGpwQ/lHfx9zvJQ7BhOoUtmej8p2h6hRdktjRBIuQugs7Gt+KPwoPaQmlyzKfhT6menwFHDWevLQh7pre+rEQTYEtU+1bz12nWZJBKCYeG92AEpfIAF1IAoLAXGbN1k+eiREgRzh92sSGIU36GEy7RNorHpgFVUspvs9tV6ZQUguGMyzC5PAt4ECtznczZHYGEHe8IMxgY3LnFAtvs+E17GDfmn6eIUxpYKMbpe7KeHKmY5gJ76LT6MIDN8Zby22QGFfZ5vHuhIk="
+
+language: python
+# The travis Python version is unrelated to the version we build and test
+# with.  This is set with the MB_PYTHON_VERSION variable.
+python: 3.5
+sudo: required
+dist: trusty
+services: docker
+
+matrix:
+  exclude:
+    # Exclude the default Python 3.5 build
+    - python: 3.5
+  include:
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.4
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.4
+        - PLAT=i686
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.5
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.5
+        - PLAT=i686
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.6
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.6
+        - PLAT=i686
+    - os: osx
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=2.7
+    - os: osx
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=3.4
+    - os: osx
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=3.5
+    - os: osx
+      language: generic
+      env:
+        - MB_PYTHON_VERSION=3.6
+
+before_install:
+    - source multibuild/common_utils.sh
+    - source multibuild/travis_steps.sh
+    - before_install
+
+install:
+    - build_wheel $REPO_DIR $PLAT
+
+script:
+    - install_run $PLAT
+
+after_success:
+    # Upload wheels to Rackspace container
+    - pip install twine
+    - twine upload --username xoviat --password $PYPI_PASSWORD ${TRAVIS_BUILD_DIR}/wheelhouse/*
+

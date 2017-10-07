@@ -2,9 +2,16 @@ version: 1.0.{build}
 build:
   verbosity: minimal
 
+branches:
+  # whitelist
+  only:
+    - master
+
 image: Visual Studio 2017
 
 environment:
+  global:
+    APPVEYOR_SAVE_CACHE_ON_ERROR: true
   matrix:
     - BUILD_TYPE: Release
       COMPILER: MSVC15
@@ -14,30 +21,65 @@ environment:
       PLATFORM: Win32
 
 cache:
-- C:\projects\mpir
-- C:\projects\mpfr
-- C:\projects\pthreads
-- C:\projects\flint2\mpir-2.7.2
-- C:\projects\flint2\mpfr-3.1.5
-
+  - '%LOCALAPPDATA%\pip\Cache'
+  - 'C:\Tools\vcpkg\installed'
+  - 'C:\Tools\vcpkg\packages'
 
 build_script:
+  # Now initialize the submodules 
   - git submodule update --init
-  - cd flint2
-
-  - if [%COMPILER%]==[MSVC15] if not exist C:\projects\mpir .build_dependencies.cmd
-  - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[x64] set PATH=C:\Python35-x64;%PATH%
-  - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[Win32] set PATH=C:\Python35;%PATH%
-
-  - if [%COMPILER%]==[MSVC15] call .appveyor_msvc_build.cmd
   
-  # Move all built libraries into the "arb" folder so that CMake can detect them  
-  - cd "%APPVEYOR_BUILD_FOLDER%"
-  - ps: ls -r . | Out-File directories.txt
-  - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
+  - ps: |
+      cd C:\Tools\vcpkg
+      git pull -q
+      .\bootstrap-vcpkg.bat
+      cd $env:APPVEYOR_BUILD_FOLDER
 
-  - cd "%APPVEYOR_BUILD_FOLDER%\arb"
-  - mkdir build
-  - cd build
-  - cmake .. -G "Visual Studio 15 2017 Win64"
-  - cmake --build . --config Release                    # build
+  - ps: |
+      vcpkg remove --outdated --recurse
+      If ($env:PLATFORM -eq "x64") {
+          vcpkg install arb:x64-windows-static
+      } Else {
+          vcpkg install arb:x86-windows-static
+      }
+
+  # Now build the project
+  - ps: |
+      cd python-flint
+      
+      If ($env:PLATFORM -eq "x64") {
+          $PYTHONS = @(
+              ("C:\\Python35-x64"),
+              ("C:\\Python36-x64")
+          )
+          
+          $VCPKG_INCLUDE_DIR = "C:\\Tools\\vcpkg\\installed\\x64-windows-static\\include"
+          $VCPKG_LIBRARY_DIR = "C:\\Tools\\vcpkg\\installed\\x64-windows-static\\lib"
+      } Else {
+          $PYTHONS = @(
+              ("C:\\Python35"),
+              ("C:\\Python36")
+          )
+          
+          $VCPKG_INCLUDE_DIR = "C:\\Tools\\vcpkg\\installed\\x86-windows-static\\include"
+          $VCPKG_LIBRARY_DIR = "C:\\Tools\\vcpkg\\installed\\x86-windows-static\\lib"
+      }
+
+      $VCPKG_LIBRARY_DIR = "$VCPKG_LIBRARY_DIR;$VCPKG_LIBRARY_DIR\\manual-link"
+      mkdir dist      
+      foreach ($PYTHON in $PYTHONS) {
+          $env:PATH="$PYTHON;$PYTHON\Scripts;$env:PATH"
+
+          python -m pip install -U pip setuptools wheel
+          pip install cython
+
+          python setup.py build_ext `
+            "--include-dirs=$VCPKG_INCLUDE_DIR;$VCPKG_INCLUDE_DIR\\flint" `
+            "--library-dirs=$VCPKG_LIBRARY_DIR"
+
+          pip wheel . --wheel-dir=dist
+      }
+
+      pip install twine
+      twine upload --user xoviat --password $env:PYPI_PASSWORD --skip-existing dist/*
+
