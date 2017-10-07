@@ -22,6 +22,7 @@ cache:
 
 
 build_script:
+  - git submodule update --init
   - ps: cp flint2\build_dependencies.git .
 
   - if [%COMPILER%]==[MSVC15] if not exist C:\projects\mpir .build_dependencies.cmd
