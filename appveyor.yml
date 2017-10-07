@@ -33,9 +33,10 @@ build_script:
   
   # Move all built libraries into the "arb" folder so that CMake can detect them  
   - cd "%APPVEYOR_BUILD_FOLDER%"
-  - ps: mv -Force flint2\mpir arb
-  - ps: mv -Force flint2\mpir arb
-  - ps: mv -Force flint2\pthreads arb
+  - ps: ls .
+  - ps: mv -Force mpir arb
+  - ps: mv -Force mpfr arb
+  - ps: mv -Force pthreads arb
   - ps: mv -Force flint2 arb
 
   - cd "%APPVEYOR_BUILD_FOLDER%\arb"
