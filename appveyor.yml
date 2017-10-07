@@ -22,6 +22,8 @@ cache:
 
 
 build_script:
+  - ps: cp flint2\build_dependencies.git .
+
   - if [%COMPILER%]==[MSVC15] if not exist C:\projects\mpir .build_dependencies.cmd
   - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[x64] set PATH=C:\Python35-x64;%PATH%
   - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[Win32] set PATH=C:\Python35;%PATH%
