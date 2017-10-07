@@ -30,9 +30,16 @@ build_script:
   - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[Win32] set PATH=C:\Python35;%PATH%
 
   - if [%COMPILER%]==[MSVC15] call .appveyor_msvc_build.cmd
+  
+  # Move all built libraries into the "arb" folder so that CMake can detect them  
+  - cd "%APPVEYOR_BUILD_FOLDER%"
+  - ps: mv -Force flint2\mpir arb
+  - ps: mv -Force flint2\mpir arb
+  - ps: mv -Force flint2\pthreads arb
+  - ps: mv -Force flint2 arb
 
   - cd "%APPVEYOR_BUILD_FOLDER%\arb"
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake .. -G "Visual Studio 15 2017 Win64"
   - cmake --build . --config Release                    # build
