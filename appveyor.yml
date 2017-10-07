@@ -36,6 +36,12 @@ build_script:
   # Move all built libraries into the "arb" folder so that CMake can detect them  
   - cd "%APPVEYOR_BUILD_FOLDER%"
   - python rename_libs.py
+  
+  - ps: mv -Force mpir arb
+  - ps: mv -Force mpfr arb
+  - ps: mv -Force pthreads arb
+  - ps: mv -Force flint2 arb
+  
   - ps: ls -r . | Out-File directories.txt
   - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
 
