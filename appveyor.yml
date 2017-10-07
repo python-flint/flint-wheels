@@ -14,16 +14,16 @@ environment:
       PLATFORM: Win32
 
 cache:
-- C:\projects\mpir -> .build_dependencies.cmd
-- C:\projects\mpfr -> .build_dependencies.cmd
-- C:\projects\pthreads -> .build_dependencies.cmd
-- C:\projects\flint2\mpir-2.7.2 -> .build_dependencies
-- C:\projects\flint2\mpfr-3.1.5 -> .build_dependencies
+- C:\projects\mpir
+- C:\projects\mpfr
+- C:\projects\pthreads
+- C:\projects\flint2\mpir-2.7.2
+- C:\projects\flint2\mpfr-3.1.5
 
 
 build_script:
   - git submodule update --init
-  - ps: cp flint2\.build_dependencies.cmd	.
+  - cd flint2
 
   - if [%COMPILER%]==[MSVC15] if not exist C:\projects\mpir .build_dependencies.cmd
   - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[x64] set PATH=C:\Python35-x64;%PATH%
