@@ -14,11 +14,11 @@ environment:
       PLATFORM: Win32
 
 cache:
-- %APPVEYOR_BUILD_FOLDER%\mpir
-- %APPVEYOR_BUILD_FOLDER%\mpfr
-- %APPVEYOR_BUILD_FOLDER%\pthreads
-- %APPVEYOR_BUILD_FOLDER%\flint2\mpir-2.7.2
-- %APPVEYOR_BUILD_FOLDER%\flint2\mpfr-3.1.5
+- "%APPVEYOR_BUILD_FOLDER%\\mpir"
+- "%APPVEYOR_BUILD_FOLDER%\\mpfr"
+- "%APPVEYOR_BUILD_FOLDER%\\pthreads"
+- "%APPVEYOR_BUILD_FOLDER%\\flint2\\mpir-2.7.2"
+- "%APPVEYOR_BUILD_FOLDER%\\flint2\\mpfr-3.1.5"
 
 build_script:
   - git submodule update --init
