@@ -4,12 +4,7 @@
 function pre_build {
     # Any stuff that you need to do before you start building the wheels
     # Runs in the root directory of this repository.
-    cd arb
-    source ../build_dependencies.sh
-    ./configure --with-mpir=$HOME/deps --with-mpfr=$HOME/deps --with-flint=$HOME/deps --prefix=$HOME/deps
-    make -j4
-    make install
-    cd ..
+    source ./build_dependencies.sh
 
     # Now go into the project directory and run a custom build_ext command
     cd python-flint
