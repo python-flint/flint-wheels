@@ -37,3 +37,14 @@ cd arb
 make -j4
 make install
 cd ..
+
+
+if [ -n $IS_OSX ]; then
+    :
+else
+    export LIBRARY_PATH=$LIBRARY_PATH:/root/deps/lib:/root/deps/lib/flint
+    export INCLUDE_PATH=$INCLUDE_PATH:/root/deps/include:/root/deps/include/flint
+
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LIBRARY_PATH
+    export LD_INCLUDE_PATH=$LD_INCLUDE_PATH:$INCLUDE_PATH
+fi
