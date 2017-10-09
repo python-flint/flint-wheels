@@ -25,7 +25,7 @@ cd ..
 wget http://flintlib.org/flint-2.5.2.tar.gz
 tar -xf flint-2.5.2.tar.gz
 cd flint-2.5.2
-./configure --with-gmp=$HOME/deps --with-mpfr=$HOME/deps --prefix=$HOME/deps --disable-static $PLATFORM_ARGS
+./configure --with-gmp=$HOME/deps --with-mpfr=$HOME/deps --prefix=$HOME/deps --disable-static
 make -j4 > /dev/null 2>&1
 make install
 cd ..
