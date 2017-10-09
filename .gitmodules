@@ -7,3 +7,6 @@
 [submodule "python-flint"]
 	path = python-flint
 	url = https://github.com/fredrik-johansson/python-flint.git
+[submodule "multibuild"]
+	path = multibuild
+	url = https://github.com/matthew-brett/multibuild.git

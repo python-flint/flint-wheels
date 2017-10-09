@@ -5,6 +5,8 @@ build:
 image: Visual Studio 2017
 
 environment:
+  global:
+    APPVEYOR_SAVE_CACHE_ON_ERROR: true
   matrix:
     - BUILD_TYPE: Release
       COMPILER: MSVC15
@@ -14,34 +16,114 @@ environment:
       PLATFORM: Win32
 
 cache:
-- "%APPVEYOR_BUILD_FOLDER%\\mpir"
-- "%APPVEYOR_BUILD_FOLDER%\\mpfr"
-- "%APPVEYOR_BUILD_FOLDER%\\pthreads"
-- "%APPVEYOR_BUILD_FOLDER%\\flint2\\mpir-2.7.2"
-- "%APPVEYOR_BUILD_FOLDER%\\flint2\\mpfr-3.1.5"
+- "%APPVEYOR_BUILD_FOLDER%\\mpir\\lib"
+- "%APPVEYOR_BUILD_FOLDER%\\mpfr\\lib"
+- "%APPVEYOR_BUILD_FOLDER%\\pthreads\\lib"
+- "%APPVEYOR_BUILD_FOLDER%\\flint2\\lib"
+- "%APPVEYOR_BUILD_FOLDER%\\arb\\build"
 
 build_script:
+  # Move all of the cache directories out-of-tree so that
+  # git will correctly initialize the submodules. Use a 
+  # ps block so that appveyor will not fail if the folders
+  # do not exist
+  - ps: |
+      mkdir cache
+      mv -Force mpir cache
+      mv -Force mpfr cache
+      mv -Force pthreads cache
+      mv -Force flint2 cache
+      mv -Force arb cache
+      $LastExitCode = 0
+
+  # Now initialize the submodules 
   - git submodule update --init
+  
+  # Now move everything back
+  - ps: |
+      cp -r -Force cache/* .
+      rm -r -Force cache
+      $LastExitCode = 0
+
   - SET PYTHON=C:\Python36-x64
   - SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
-  - cd flint2
 
-  - if [%COMPILER%]==[MSVC15] if not exist C:\projects\mpir .build_dependencies.cmd
-  - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[x64] set PATH=C:\Python35-x64;%PATH%
-  - if [%COMPILER%]==[MSVC15] if [%PLATFORM%]==[Win32] set PATH=C:\Python35;%PATH%
+  # Build the flint depedencies if they don't
+  # exist. We build them all in a set to avoid
+  # additional maintenance (this is a naive
+  # implementation)
+  - ps: |
+      If (-Not (Test-Path .\mpir\lib)) {
+          cd flint2
+          cmd /c ".build_dependencies.cmd"
+          cd $env:APPVEYOR_BUILD_FOLDER
+      }
 
-  # - if [%COMPILER%]==[MSVC15] call .appveyor_msvc_build.cmd
-  
-  # Move all built libraries into the "arb" folder so that CMake can detect them  
-  - cd "%APPVEYOR_BUILD_FOLDER%"
-  - python rename_libs.py
-    
+  # Build flint if it doesn't exist
+  - ps: |
+      If (-Not (Test-Path .\flint2\lib)) {
+          cd flint2
+          cmd /c ".appveyor_msvc_build.cmd"
+          cd $env:APPVEYOR_BUILD_FOLDER
+          python fix_flint2.py
+      }
+
+  # Build arb if it doesn't exist
+  - ps: |
+      If (-Not (Test-Path .\arb\build\Release\arb.lib)) {
+          rm -Force arb\CMakeLists.txt
+          cp CMakeLists.txt arb
+          cd arb
+          mkdir build
+          cd build
+          If ($env:PLATFORM -eq "x64") {
+              $gen = "Visual Studio 15 2017 Win64"
+          } Else {
+              $gen = "Visual Studio 15 2017"
+          }
+          cmake .. -G $gen
+          cmake --build . --config Release
+          cd $env:APPVEYOR_BUILD_FOLDER
+      }
+
   - ps: ls -r . | Out-File directories.txt
   - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
+  
+  # Now build the project
+  - ps: |
+      cd python-flint
+      
+      # Replace the "setup.py" with a patched version
+      rm setup.py
+      cp ..\project_setup.py .\setup.py
+      
+      $PYTHONS = @(
+          ("C:\\Python35-x64"),
+          ("C:\\Python36-x64")
+      )
+      
+      mkdir dist      
+      foreach ($PYTHON in $PYTHONS) {
+          $env:PATH="$PYTHON;$PYTHON\Scripts;$env:PATH"
 
-  - cd "%APPVEYOR_BUILD_FOLDER%\arb"
-  - mkdir build
-  - cd build
-  - cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_LIBRARY_PATH="C:/projects/build-python-flint/mpir"
+          python -m pip install -U pip setuptools wheel
+          pip install cython
 
-  - cmake --build . --config Release                    # build
+          $ARB_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\arb\\build\\Release;$env:APPVEYOR_BUILD_FOLDER\\arb"
+          $FLINT_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\flint2\\lib\\$env:PLATFORM\\Release"
+          $MPIR_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\mpir\\lib\\$env:PLATFORM\\Release"
+          $MPFR_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\mpfr\\lib\\$env:PLATFORM\\Release"
+          $PTHREADS_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\pthreads\\lib\\$env:PLATFORM\\Release"
+
+          python setup.py build_ext `
+            "--include-dirs=$FLINT_BUILD_DIR;$ARB_BUILD_DIR;$MPIR_BUILD_DIR;$MPFR_BUILD_DIR;$PTHREADS_BUILD_DIR" `
+            "--library-dirs=$FLINT_BUILD_DIR;$ARB_BUILD_DIR;$MPIR_BUILD_DIR;$MPFR_BUILD_DIR;$PTHREADS_BUILD_DIR"
+            
+          pip wheel . --wheel-dir=dist
+          rm -r -Force build
+      }
+
+      ls dist -r | Foreach-Object {
+          appveyor PushArtifact $_.FullName
+          pip install $_.FullName
+      }

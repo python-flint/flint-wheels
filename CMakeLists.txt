@@ -26,6 +26,7 @@ if (BUILD_SHARED_LIBS)
     set (LIBRARY_TYPE dll)
 else ()
     set (LIBRARY_TYPE lib)
+    add_definitions(-DFLINT_DLL=extern)
 endif()
 
 set (MSVC_USE_MT yes CACHE BOOL "Use MT flags when compiling in MSVC")
