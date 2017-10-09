@@ -125,5 +125,4 @@ build_script:
 
       ls dist -r | Foreach-Object {
           appveyor PushArtifact $_.FullName
-          pip install $_.FullName
       }
