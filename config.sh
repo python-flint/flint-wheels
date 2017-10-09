@@ -8,6 +8,7 @@ function pre_build {
     
     # Now go into the project directory and run a custom build_ext command
     cd python-flint
+    python -m pip install cython
     python setup.py build_ext --include-dirs=$LD_INCLUDE_PATH --library-dirs=$LD_LIBRARY_PATH
     cd ..
 }
