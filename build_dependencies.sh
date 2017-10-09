@@ -2,7 +2,7 @@
 
 set -e -x
 
-if [ -n $IS_OSX ]; then
+if [ -n "$IS_OSX" ]; then
     local PLATFORM_ARGS=--host=x86_64-darwin-none
 else
     local PLATFORM_ARGS=--enable-fat
@@ -39,7 +39,7 @@ make install
 cd ..
 
 
-if [ -n $IS_OSX ]; then
+if [ -n "$IS_OSX" ]; then
     :
 else
     export LIBRARY_PATH=$LIBRARY_PATH:/root/deps/lib:/root/deps/lib/flint
