@@ -1,5 +1,7 @@
 #! /bin/sh
 
+set -e -x
+
 if [ -n $IS_OSX ]; then
     local PLATFORM_ARGS=--host=x86_64-darwin-none
 else
@@ -27,5 +29,11 @@ tar -xf flint-2.5.2.tar.gz
 cd flint-2.5.2
 ./configure --with-gmp=$HOME/deps --with-mpfr=$HOME/deps --prefix=$HOME/deps --disable-static
 make -j4 > /dev/null 2>&1
+make install
+cd ..
+
+cd arb
+./configure --with-mpir=$HOME/deps --with-mpfr=$HOME/deps --with-flint=$HOME/deps --prefix=$HOME/deps
+make -j4
 make install
 cd ..
