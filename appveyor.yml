@@ -16,75 +16,23 @@ environment:
       PLATFORM: Win32
 
 cache:
-- "%APPVEYOR_BUILD_FOLDER%\\mpir\\lib"
-- "%APPVEYOR_BUILD_FOLDER%\\mpfr\\lib"
-- "%APPVEYOR_BUILD_FOLDER%\\pthreads\\lib"
-- "%APPVEYOR_BUILD_FOLDER%\\flint2\\lib"
-- "%APPVEYOR_BUILD_FOLDER%\\arb\\build"
+  - '%LOCALAPPDATA%\pip\Cache'
+  - 'C:\Tools\vcpkg\installed'
+  - 'C:\Tools\vcpkg\packages'
 
 build_script:
-  # Move all of the cache directories out-of-tree so that
-  # git will correctly initialize the submodules. Use a 
-  # ps block so that appveyor will not fail if the folders
-  # do not exist
-  - ps: |
-      mkdir cache
-      mv -Force mpir cache
-      mv -Force mpfr cache
-      mv -Force pthreads cache
-      mv -Force flint2 cache
-      mv -Force arb cache
-      $LastExitCode = 0
-
   # Now initialize the submodules 
   - git submodule update --init
   
-  # Now move everything back
   - ps: |
-      cp -r -Force cache/* .
-      rm -r -Force cache
-      $LastExitCode = 0
+      git clone -q --branch=arblib https://github.com/xoviat/vcpkg.git
+      cd vcpkg
+      rm -r -Force C:\Tools\vcpkg\ports
+      cp -r ports C:\Tools\vcpkg
+      cd ..
+      rm -r -Force vcpkg
 
-  - SET PYTHON=C:\Python36-x64
-  - SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
-
-  # Build the flint depedencies if they don't
-  # exist. We build them all in a set to avoid
-  # additional maintenance (this is a naive
-  # implementation)
-  - ps: |
-      If (-Not (Test-Path .\mpir\lib)) {
-          cd flint2
-          cmd /c ".build_dependencies.cmd"
-          cd $env:APPVEYOR_BUILD_FOLDER
-      }
-
-  # Build flint if it doesn't exist
-  - ps: |
-      If (-Not (Test-Path .\flint2\lib)) {
-          cd flint2
-          cmd /c ".appveyor_msvc_build.cmd"
-          cd $env:APPVEYOR_BUILD_FOLDER
-          python fix_flint2.py
-      }
-
-  # Build arb if it doesn't exist
-  - ps: |
-      If (-Not (Test-Path .\arb\build\Release\arb.lib)) {
-          rm -Force arb\CMakeLists.txt
-          cp CMakeLists.txt arb
-          cd arb
-          mkdir build
-          cd build
-          If ($env:PLATFORM -eq "x64") {
-              $gen = "Visual Studio 15 2017 Win64"
-          } Else {
-              $gen = "Visual Studio 15 2017"
-          }
-          cmake .. -G $gen
-          cmake --build . --config Release
-          cd $env:APPVEYOR_BUILD_FOLDER
-      }
+  - vcpkg install arb:x64-windows-static
 
   - ps: ls -r . | Out-File directories.txt
   - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
