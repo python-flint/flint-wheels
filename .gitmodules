@@ -1,6 +1,3 @@
-[submodule "flint2"]
-	path = flint2
-	url = https://github.com/fredrik-johansson/flint2.git
 [submodule "python-flint"]
 	path = python-flint
 	url = https://github.com/fredrik-johansson/python-flint.git
