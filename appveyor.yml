@@ -57,16 +57,13 @@ build_script:
           python -m pip install -U pip setuptools wheel
           pip install cython
 
-          $ARB_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\arb\\build\\Release;$env:APPVEYOR_BUILD_FOLDER\\arb"
-          $FLINT_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\flint2\\lib\\$env:PLATFORM\\Release"
-          $MPIR_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\mpir\\lib\\$env:PLATFORM\\Release"
-          $MPFR_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\mpfr\\lib\\$env:PLATFORM\\Release"
-          $PTHREADS_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\pthreads\\lib\\$env:PLATFORM\\Release"
+          $VCPKG_INCLUDE_DIR = "C:\\Tools\\vcpkg\\packages\\flint_x64-windows-static\\include"
+          $VCPKG_LIBRARY_DIR = "C:\\Tools\\vcpkg\\packages\\flint_x64-windows-static\\lib"
 
           python setup.py build_ext `
-            "--include-dirs=$FLINT_BUILD_DIR;$ARB_BUILD_DIR;$MPIR_BUILD_DIR;$MPFR_BUILD_DIR;$PTHREADS_BUILD_DIR" `
-            "--library-dirs=$FLINT_BUILD_DIR;$ARB_BUILD_DIR;$MPIR_BUILD_DIR;$MPFR_BUILD_DIR;$PTHREADS_BUILD_DIR"
-            
+            "--include-dirs=$VCPKG_INCLUDE_DIR" `
+            "--library-dirs=$VCPKG_LIBRARY_DIR"
+
           pip wheel . --wheel-dir=dist
           rm -r -Force build
       }
