@@ -36,8 +36,6 @@ build_script:
       If ($env:PLATFORM -eq "x64") {
           vcpkg install arb:x64-windows-static
       } Else {
-          rm -r -Force "C:\\Tools\\vcpkg\\installed\\x64-windows-static"
-          rm -r -Force "C:\\Tools\\vcpkg\\packages\\x64-windows-static"
           vcpkg install arb:x86-windows-static
       }
 
