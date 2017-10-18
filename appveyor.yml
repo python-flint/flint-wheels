@@ -16,78 +16,33 @@ environment:
       PLATFORM: Win32
 
 cache:
-- "%APPVEYOR_BUILD_FOLDER%\\mpir\\lib"
-- "%APPVEYOR_BUILD_FOLDER%\\mpfr\\lib"
-- "%APPVEYOR_BUILD_FOLDER%\\pthreads\\lib"
-- "%APPVEYOR_BUILD_FOLDER%\\flint2\\lib"
-- "%APPVEYOR_BUILD_FOLDER%\\arb\\build"
+  - '%LOCALAPPDATA%\pip\Cache'
+  - 'C:\Tools\vcpkg\installed'
+  - 'C:\Tools\vcpkg\packages'
 
 build_script:
-  # Move all of the cache directories out-of-tree so that
-  # git will correctly initialize the submodules. Use a 
-  # ps block so that appveyor will not fail if the folders
-  # do not exist
-  - ps: |
-      mkdir cache
-      mv -Force mpir cache
-      mv -Force mpfr cache
-      mv -Force pthreads cache
-      mv -Force flint2 cache
-      mv -Force arb cache
-      $LastExitCode = 0
-
   # Now initialize the submodules 
   - git submodule update --init
   
-  # Now move everything back
   - ps: |
-      cp -r -Force cache/* .
-      rm -r -Force cache
-      $LastExitCode = 0
+      git clone -q --branch=arblib https://github.com/xoviat/vcpkg.git
+      cd vcpkg
+      rm -r -Force C:\Tools\vcpkg\ports
+      cp -r ports C:\Tools\vcpkg
+      cd ..
+      rm -r -Force vcpkg
 
-  - SET PYTHON=C:\Python36-x64
-  - SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
-
-  # Build the flint depedencies if they don't
-  # exist. We build them all in a set to avoid
-  # additional maintenance (this is a naive
-  # implementation)
   - ps: |
-      If (-Not (Test-Path .\mpir\lib)) {
-          cd flint2
-          cmd /c ".build_dependencies.cmd"
-          cd $env:APPVEYOR_BUILD_FOLDER
+      If ($env:PLATFORM -eq "x64") {
+          vcpkg install arb:x64-windows-static
+      } Else {
+          vcpkg install arb:x86-windows-static
       }
 
-  # Build flint if it doesn't exist
-  - ps: |
-      If (-Not (Test-Path .\flint2\lib)) {
-          cd flint2
-          cmd /c ".appveyor_msvc_build.cmd"
-          cd $env:APPVEYOR_BUILD_FOLDER
-          python fix_flint2.py
-      }
-
-  # Build arb if it doesn't exist
-  - ps: |
-      If (-Not (Test-Path .\arb\build\Release\arb.lib)) {
-          rm -Force arb\CMakeLists.txt
-          cp CMakeLists.txt arb
-          cd arb
-          mkdir build
-          cd build
-          If ($env:PLATFORM -eq "x64") {
-              $gen = "Visual Studio 15 2017 Win64"
-          } Else {
-              $gen = "Visual Studio 15 2017"
-          }
-          cmake .. -G $gen
-          cmake --build . --config Release
-          cd $env:APPVEYOR_BUILD_FOLDER
-      }
-
-  - ps: ls -r . | Out-File directories.txt
-  - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
+  # - ps: ls -r "C:\Tools\vcpkg\packages" | Out-File directories.txt
+  # - ps: ls -r "C:\Tools\vcpkg\installed" | Out-File installed-directories.txt
+  # - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
+  # - ps: appveyor PushArtifact (Get-Item -Path ".\installed-directories.txt" -Verbose).FullName
   
   # Now build the project
   - ps: |
@@ -96,12 +51,27 @@ build_script:
       # Replace the "setup.py" with a patched version
       rm setup.py
       cp ..\project_setup.py .\setup.py
+      cp ..\printf.c .
       
-      $PYTHONS = @(
-          ("C:\\Python35-x64"),
-          ("C:\\Python36-x64")
-      )
-      
+      If ($env:PLATFORM -eq "x64") {
+          $PYTHONS = @(
+              ("C:\\Python35-x64"),
+              ("C:\\Python36-x64")
+          )
+          
+          $VCPKG_INCLUDE_DIR = "C:\\Tools\\vcpkg\\installed\\x64-windows-static\\include"
+          $VCPKG_LIBRARY_DIR = "C:\\Tools\\vcpkg\\installed\\x64-windows-static\\lib"
+      } Else {
+          $PYTHONS = @(
+              ("C:\\Python35"),
+              ("C:\\Python36")
+          )
+          
+          $VCPKG_INCLUDE_DIR = "C:\\Tools\\vcpkg\\installed\\x86-windows-static\\include"
+          $VCPKG_LIBRARY_DIR = "C:\\Tools\\vcpkg\\installed\\x86-windows-static\\lib"
+      }
+
+      $VCPKG_LIBRARY_DIR = "$VCPKG_LIBRARY_DIR;$VCPKG_LIBRARY_DIR\\manual-link"
       mkdir dist      
       foreach ($PYTHON in $PYTHONS) {
           $env:PATH="$PYTHON;$PYTHON\Scripts;$env:PATH"
@@ -109,16 +79,10 @@ build_script:
           python -m pip install -U pip setuptools wheel
           pip install cython
 
-          $ARB_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\arb\\build\\Release;$env:APPVEYOR_BUILD_FOLDER\\arb"
-          $FLINT_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\flint2\\lib\\$env:PLATFORM\\Release"
-          $MPIR_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\mpir\\lib\\$env:PLATFORM\\Release"
-          $MPFR_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\mpfr\\lib\\$env:PLATFORM\\Release"
-          $PTHREADS_BUILD_DIR = "$env:APPVEYOR_BUILD_FOLDER\\pthreads\\lib\\$env:PLATFORM\\Release"
-
           python setup.py build_ext `
-            "--include-dirs=$FLINT_BUILD_DIR;$ARB_BUILD_DIR;$MPIR_BUILD_DIR;$MPFR_BUILD_DIR;$PTHREADS_BUILD_DIR" `
-            "--library-dirs=$FLINT_BUILD_DIR;$ARB_BUILD_DIR;$MPIR_BUILD_DIR;$MPFR_BUILD_DIR;$PTHREADS_BUILD_DIR"
-            
+            "--include-dirs=$VCPKG_INCLUDE_DIR;$VCPKG_INCLUDE_DIR\\flint" `
+            "--library-dirs=$VCPKG_LIBRARY_DIR"
+
           pip wheel . --wheel-dir=dist
           rm -r -Force build
       }
