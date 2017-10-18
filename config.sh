@@ -24,7 +24,10 @@ function pre_build {
     # Any stuff that you need to do before you start building the wheels
     # Runs in the root directory of this repository.
     if [ -n "$IS_OSX" ]; then
-        HOMEBREW_NO_AUTO_UPDATE=1 brew install homebrew/science/arb
+        brew update
+        brew install gcc homebrew/science/arb
+        export CC=gcc
+        export CXX=gcc
     else
         wget http://mpir.org/mpir-2.7.0.tar.bz2
         tar -xf mpir-2.7.0.tar.bz2
