@@ -36,4 +36,7 @@ else
     make -j4
     make install
     cd ..
+    
+    # Copy the flint headers
+    cp /usr/local/include/flint/*.h /usr/local/include
 fi
