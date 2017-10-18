@@ -32,12 +32,19 @@ build_script:
       cd ..
       rm -r -Force vcpkg
 
-  - vcpkg install arb:x64-windows-static
+  - ps: |
+      If ($env:PLATFORM -eq "x64") {
+          vcpkg install arb:x64-windows-static
+      } Else {
+          rm -r -Force "C:\\Tools\\vcpkg\\installed\\x64-windows-static"
+          rm -r -Force "C:\\Tools\\vcpkg\\packages\\x64-windows-static"
+          vcpkg install arb:x86-windows-static
+      }
 
-  - ps: ls -r "C:\Tools\vcpkg\packages" | Out-File directories.txt
-  - ps: ls -r "C:\Tools\vcpkg\installed" | Out-File installed-directories.txt
-  - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
-  - ps: appveyor PushArtifact (Get-Item -Path ".\installed-directories.txt" -Verbose).FullName
+  # - ps: ls -r "C:\Tools\vcpkg\packages" | Out-File directories.txt
+  # - ps: ls -r "C:\Tools\vcpkg\installed" | Out-File installed-directories.txt
+  # - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
+  # - ps: appveyor PushArtifact (Get-Item -Path ".\installed-directories.txt" -Verbose).FullName
   
   # Now build the project
   - ps: |
@@ -48,11 +55,18 @@ build_script:
       cp ..\project_setup.py .\setup.py
       cp ..\printf.c .
       
-      $PYTHONS = @(
-          ("C:\\Python35-x64"),
-          ("C:\\Python36-x64")
-      )
-      
+      If ($env:PLATFORM -eq "x64") {
+          $PYTHONS = @(
+              ("C:\\Python35-x64"),
+              ("C:\\Python36-x64")
+          )
+      } Else {
+          $PYTHONS = @(
+              ("C:\\Python35"),
+              ("C:\\Python36")
+          )
+      }
+
       mkdir dist      
       foreach ($PYTHON in $PYTHONS) {
           $env:PATH="$PYTHON;$PYTHON\Scripts;$env:PATH"
