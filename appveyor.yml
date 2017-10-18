@@ -71,6 +71,7 @@ build_script:
           $VCPKG_LIBRARY_DIR = "C:\\Tools\\vcpkg\\installed\\x86-windows-static\\lib"
       }
 
+      $VCPKG_LIBRARY_DIR = "$VCPKG_LIBRARY_DIR;$VCPKG_LIBRARY_DIR\\manual-link"
       mkdir dist      
       foreach ($PYTHON in $PYTHONS) {
           $env:PATH="$PYTHON;$PYTHON\Scripts;$env:PATH"
