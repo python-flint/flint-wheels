@@ -37,6 +37,7 @@ else
     make install
     cd ..
     
-    # Copy the flint headers
-    cp /usr/local/include/flint/*.h /usr/local/include
 fi
+
+# Copy the flint headers
+cp /usr/local/include/flint/*.h /usr/local/include
