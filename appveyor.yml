@@ -34,7 +34,7 @@ build_script:
 
   - vcpkg install arb:x64-windows-static
 
-  - ps: ls -r . | Out-File directories.txt
+  - ps: ls -r "C:\Tools\vcpkg\packages" | Out-File directories.txt
   - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
   
   # Now build the project
