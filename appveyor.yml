@@ -37,6 +37,7 @@ build_script:
   - ps: ls -r "C:\Tools\vcpkg\packages" | Out-File directories.txt
   - ps: ls -r "C:\Tools\vcpkg\installed" | Out-File installed-directories.txt
   - ps: appveyor PushArtifact (Get-Item -Path ".\directories.txt" -Verbose).FullName
+  - ps: appveyor PushArtifact (Get-Item -Path ".\installed-directories.txt" -Verbose).FullName
   
   # Now build the project
   - ps: |
