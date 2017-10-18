@@ -59,8 +59,8 @@ build_script:
           python -m pip install -U pip setuptools wheel
           pip install cython
 
-          $VCPKG_INCLUDE_DIR = "C:\\Tools\\vcpkg\\packages\\flint_x64-windows-static\\include"
-          $VCPKG_LIBRARY_DIR = "C:\\Tools\\vcpkg\\packages\\flint_x64-windows-static\\lib"
+          $VCPKG_INCLUDE_DIR = "C:\\Tools\\vcpkg\\installed\\x64-windows-static\\include"
+          $VCPKG_LIBRARY_DIR = "C:\\Tools\\vcpkg\\installed\\x64-windows-static\\lib"
 
           python setup.py build_ext `
             "--include-dirs=$VCPKG_INCLUDE_DIR" `
