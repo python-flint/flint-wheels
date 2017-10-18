@@ -63,7 +63,7 @@ build_script:
           $VCPKG_LIBRARY_DIR = "C:\\Tools\\vcpkg\\installed\\x64-windows-static\\lib"
 
           python setup.py build_ext `
-            "--include-dirs=$VCPKG_INCLUDE_DIR" `
+            "--include-dirs=$VCPKG_INCLUDE_DIR;$VCPKG_INCLUDE_DIR\\flint" `
             "--library-dirs=$VCPKG_LIBRARY_DIR"
 
           pip wheel . --wheel-dir=dist
