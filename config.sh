@@ -54,5 +54,5 @@ function pre_build {
 function run_tests {
     # Runs tests on installed distribution from an empty directory
     cd ../python-flint
-    py.test
+    py.test test/test.py
 }
