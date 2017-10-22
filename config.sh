@@ -25,7 +25,8 @@ function pre_build {
     # Runs in the root directory of this repository.
     if [ -n "$IS_OSX" ]; then
         brew update
-        brew install gcc homebrew/science/arb
+        brew install -v gcc
+        brew install -v homebrew/science/arb
         export CC=gcc
         export CXX=gcc
     else
@@ -44,6 +45,10 @@ function pre_build {
 
     # Copy the flint headers
     cp /usr/local/include/flint/*.h /usr/local/include
+    if [ -n "$IS_OSX" ]; then
+        rm /usr/local/include/config.h
+        cp ./osx_config.h /usr/local/include/config.h
+    fi
 }
 
 function run_tests {
