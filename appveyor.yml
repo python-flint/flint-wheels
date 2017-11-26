@@ -12,6 +12,8 @@ image: Visual Studio 2017
 environment:
   global:
     APPVEYOR_SAVE_CACHE_ON_ERROR: true
+    PYPI_PASSWORD:
+      secure: rToy5D17/4zLIaIBq9S4UQ==
   matrix:
     - BUILD_TYPE: Release
       COMPILER: MSVC15
