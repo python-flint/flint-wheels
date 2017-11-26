@@ -83,4 +83,4 @@ build_script:
       }
 
   - pip install twine
-  - twine upload --user xoviat --password $env:PYPI_PASSWORD --skip-existing dist/*
+  - twine upload --user xoviat --password %PYPI_PASSWORD% --skip-existing dist/*
