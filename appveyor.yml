@@ -73,7 +73,7 @@ build_script:
           $env:PATH="$PYTHON;$PYTHON\Scripts;$env:PATH"
 
           python -m pip install -U pip setuptools wheel
-          pip install cython
+          pip install cython numpy
 
           python setup.py build_ext `
             "--include-dirs=$VCPKG_INCLUDE_DIR;$VCPKG_INCLUDE_DIR\\flint" `
