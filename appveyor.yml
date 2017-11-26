@@ -82,6 +82,5 @@ build_script:
           pip wheel . --wheel-dir=dist
       }
 
-      pip install twine
-      twine upload --user xoviat --password $env:PYPI_PASSWORD --skip-existing dist/*
-
+  - pip install twine
+  - twine upload --user xoviat --password $env:PYPI_PASSWORD --skip-existing dist/*
