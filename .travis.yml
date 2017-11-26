@@ -84,5 +84,5 @@ script:
 after_success:
     # Upload wheels to Rackspace container
     - pip install twine
-    - twine upload --username xoviat --password $PYPI_PASSWORD ${TRAVIS_BUILD_DIR}/wheelhouse/*
+    - twine upload --skip-existing --username xoviat --password $PYPI_PASSWORD ${TRAVIS_BUILD_DIR}/wheelhouse/*
 
